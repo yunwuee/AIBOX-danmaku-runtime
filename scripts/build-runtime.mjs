@@ -83,7 +83,7 @@ await writeJson(path.join(distPath, 'manifest.json'), runtimeManifest);
 
 const artifactName = `aibox-danmaku-runtime-${packageJson.version}.zip`;
 const artifactPath = path.join(artifactsPath, artifactName);
-const zipTimestamp = new Date('1980-01-01T00:00:00.000Z');
+const zipTimestamp = new Date(1980, 0, 1, 0, 0, 0);
 const zipEntries = {};
 for (const fileName of [...runtimeManifest.files, 'manifest.json']) {
   const contents = new Uint8Array(await readFile(path.join(distPath, fileName)));

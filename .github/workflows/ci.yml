@@ -21,6 +21,12 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run check
+      - name: Verify time-zone independent archive
+        shell: bash
+        run: |
+          cp artifacts/aibox-danmaku-runtime-*.zip /tmp/aibox-runtime-utc.zip
+          TZ=Asia/Shanghai npm run build
+          cmp --silent /tmp/aibox-runtime-utc.zip artifacts/aibox-danmaku-runtime-*.zip
       - uses: actions/upload-artifact@v4
         with:
           name: runtime-candidate
