@@ -15,6 +15,10 @@ function packageName(specifier) {
   return specifier.split('/')[0];
 }
 
+export function normalizeSourceText(source) {
+  return source.replace(/\r\n?/g, '\n');
+}
+
 async function resolveRelativeModule(sourceRoot, importerKey, specifier, replacements) {
   const baseKey = path.posix.normalize(path.posix.join(path.posix.dirname(importerKey), specifier));
   if (baseKey.startsWith('../') || baseKey === '..' || path.posix.isAbsolute(baseKey)) {
@@ -27,7 +31,7 @@ async function resolveRelativeModule(sourceRoot, importerKey, specifier, replace
     if (replacements[candidate]) return candidate;
     try {
       const sourcePath = assertInside(sourceRoot, path.join(sourceRoot, candidate), 'upstream module');
-      const source = await readFile(sourcePath, 'utf8');
+      const source = normalizeSourceText(await readFile(sourcePath, 'utf8'));
       if (source != null) return candidate;
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
@@ -57,7 +61,7 @@ export async function collectImportGraph({ sourceRoot, policy }) {
     const sourcePath = replacement
       ? assertInside(repoRoot, path.join(repoRoot, replacement), 'replacement module')
       : assertInside(sourceRoot, path.join(sourceRoot, key), 'upstream module');
-    const source = await readFile(sourcePath, 'utf8');
+    const source = normalizeSourceText(await readFile(sourcePath, 'utf8'));
     const sourceBytes = Buffer.byteLength(source);
     if (sourceBytes > policy.limits.maxSingleFileBytes) {
       throw new Error(`Source module exceeds per-file limit: ${key}`);

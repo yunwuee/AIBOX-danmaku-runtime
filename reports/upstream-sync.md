@@ -6,7 +6,7 @@
 - Commit date: 2026-07-27T08:03:05+08:00
 - Upstream version: `1.0.0`
 - Selected modules: 46
-- Selected source bytes: 1044248
+- Selected source bytes: 1018918
 - Replaced modules: 11
 - Allowed packages: `brotli`, `node-fetch`, `opencc-js`, `pako`
 

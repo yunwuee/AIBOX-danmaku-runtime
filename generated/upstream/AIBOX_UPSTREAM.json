@@ -7,7 +7,7 @@
   "upstreamVersion": "1.0.0",
   "generatedAt": "2026-07-27T08:03:05+08:00",
   "fileCount": 46,
-  "sourceBytes": 1044248,
+  "sourceBytes": 1018918,
   "packages": [
     "brotli",
     "node-fetch",

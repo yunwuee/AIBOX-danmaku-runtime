@@ -55,12 +55,13 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  open-pull-request:
+  publish-candidate:
     needs: prepare
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
       pull-requests: write
     env:
       GH_TOKEN: ${{ github.token }}
@@ -74,13 +75,17 @@ jobs:
         with:
           name: upstream-sync
           path: .sync-staging
-      - name: Skip an existing pull request
+      - name: Skip an existing candidate
         id: existing
         shell: bash
         run: |
           branch="automation/upstream-${UPSTREAM_SHORT}"
+          branch_exists=false
+          if git ls-remote --exit-code --heads origin "refs/heads/$branch" >/dev/null 2>&1; then
+            branch_exists=true
+          fi
           count="$(gh pr list --head "$branch" --state all --json number --jq length)"
-          if [ "$count" != "0" ]; then
+          if [ "$branch_exists" = "true" ] || [ "$count" != "0" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -97,8 +102,12 @@ jobs:
           git add generated/upstream upstream.lock.json reports/upstream-sync.md LICENSE THIRD_PARTY_NOTICES.md
           git commit -m "chore: sync danmu_api ${UPSTREAM_SHORT}"
           git push --set-upstream origin "$branch"
-          gh pr create \
+          if ! gh pr create \
             --base main \
             --head "$branch" \
             --title "chore: sync danmu_api ${UPSTREAM_SHORT}" \
-            --body "Automated candidate update for upstream commit \`${UPSTREAM_COMMIT}\`. This PR must pass the Node 18 runtime build, security verification, and human review before merge. See \`reports/upstream-sync.md\` for the deterministic selection report."
+            --body "Automated candidate update for upstream commit \`${UPSTREAM_COMMIT}\`. This PR must pass the Node 18 runtime build, security verification, and human review before merge. See \`reports/upstream-sync.md\` for the deterministic selection report."; then
+            gh issue create \
+              --title "Review danmu_api update ${UPSTREAM_SHORT}" \
+              --body "A reviewed candidate branch was created for upstream commit \`${UPSTREAM_COMMIT}\`, but repository policy prevented GitHub Actions from opening the pull request. [Open the comparison and create the pull request manually](https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}?expand=1)."
+          fi

@@ -2,7 +2,15 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
+import { normalizeSourceText } from '../scripts/lib/import-graph.mjs';
 import { fromRoot, readJson } from '../scripts/lib/project.mjs';
+
+test('normalizes source bytes independently of checkout line endings', () => {
+  const unixSource = 'import value from "./value.js";\nexport default value;\n';
+  const windowsSource = unixSource.replace(/\n/g, '\r\n');
+  assert.equal(normalizeSourceText(windowsSource), unixSource);
+  assert.equal(Buffer.byteLength(normalizeSourceText(windowsSource)), Buffer.byteLength(unixSource));
+});
 
 test('locks a reviewed upstream commit and records replacements', async () => {
   const lock = await readJson(fromRoot('upstream.lock.json'));
