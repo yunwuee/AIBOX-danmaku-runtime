@@ -39,7 +39,7 @@ jobs:
             --verify-tag \
             --generate-notes \
             --title "AIBOX Danmaku Runtime $GITHUB_REF_NAME"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: github.event_name == 'workflow_dispatch'
         with:
           name: runtime-release-candidate

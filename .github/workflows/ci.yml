@@ -27,7 +27,7 @@ jobs:
           cp artifacts/aibox-danmaku-runtime-*.zip /tmp/aibox-runtime-utc.zip
           TZ=Asia/Shanghai npm run build
           cmp --silent /tmp/aibox-runtime-utc.zip artifacts/aibox-danmaku-runtime-*.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: runtime-candidate
           path: artifacts/

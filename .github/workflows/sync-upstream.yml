@@ -42,7 +42,7 @@ jobs:
           commit="$(node -p "require('./upstream.lock.json').commit")"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           echo "short_commit=${commit:0:12}" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.diff.outputs.changed == 'true'
         with:
           name: upstream-sync
