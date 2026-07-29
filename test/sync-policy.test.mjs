@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { test } from 'node:test';
+
+import { fromRoot, readJson } from '../scripts/lib/project.mjs';
+
+test('locks a reviewed upstream commit and records replacements', async () => {
+  const lock = await readJson(fromRoot('upstream.lock.json'));
+  assert.match(lock.commit, /^[0-9a-f]{40}$/);
+  assert.equal(lock.repository, 'https://github.com/huangxd-/danmu_api.git');
+  assert.ok(lock.fileCount > 10);
+  const replacedTargets = new Set(lock.replacements.map((entry) => entry.target));
+  assert.ok(replacedTargets.has('danmu_api/utils/redis-util.js'));
+  assert.ok(replacedTargets.has('danmu_api/utils/local-redis-util.js'));
+  assert.ok(replacedTargets.has('danmu_api/sources/migu.js'));
+});
+
+test('generated source cannot re-enable excluded local services', async () => {
+  const globals = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'configs', 'globals.js'), 'utf8');
+  const migu = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'sources', 'migu.js'), 'utf8');
+  const redis = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'utils', 'redis-util.js'), 'utf8');
+  assert.doesNotMatch(globals, /127\.0\.0\.1:5321\/proxy/);
+  assert.doesNotMatch(migu, /WebAssembly|WASM_BASE64/);
+  assert.doesNotMatch(redis, /from ['"]redis['"]|createClient/);
+});

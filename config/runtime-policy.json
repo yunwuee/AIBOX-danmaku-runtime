@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/huangxd-/danmu_api.git",
+    "branch": "main",
+    "sourceRoot": "danmu_api",
+    "licenseFile": "LICENSE",
+    "packageFile": "package.json"
+  },
+  "entrypoints": [
+    "danmu_api/apis/dandan-api.js",
+    "danmu_api/configs/globals.js"
+  ],
+  "replacements": {
+    "danmu_api/utils/redis-util.js": "stubs/redis-util.js",
+    "danmu_api/utils/local-redis-util.js": "stubs/local-redis-util.js",
+    "danmu_api/sources/migu.js": "stubs/disabled-source.js",
+    "danmu_api/sources/custom.js": "stubs/disabled-source.js",
+    "danmu_api/sources/other.js": "stubs/disabled-source.js",
+    "danmu_api/sources/vod.js": "stubs/disabled-source.js",
+    "danmu_api/sources/tmdb.js": "stubs/disabled-source.js",
+    "danmu_api/sources/maiduidui.js": "stubs/disabled-source.js",
+    "danmu_api/sources/aiyifan.js": "stubs/disabled-source.js",
+    "danmu_api/sources/hongguo.js": "stubs/disabled-hongguo-source.js",
+    "danmu_api/utils/dan-any.js": "stubs/dan-any.js"
+  },
+  "allowedPackages": [
+    "brotli",
+    "node-fetch",
+    "opencc-js",
+    "pako"
+  ],
+  "allowedNodeBuiltins": [
+    "node:async_hooks",
+    "node:buffer",
+    "node:crypto",
+    "node:fs",
+    "node:fs/promises",
+    "node:path",
+    "node:url",
+    "node:zlib",
+    "fs",
+    "path",
+    "stream/promises"
+  ],
+  "defaultSources": [
+    "dandan",
+    "bilibili",
+    "qq",
+    "qiyi",
+    "imgo",
+    "youku",
+    "sohu",
+    "leshi",
+    "xigua",
+    "renren",
+    "hanjutv",
+    "bahamut",
+    "animeko",
+    "douban",
+    "360"
+  ],
+  "disabledSources": [
+    "migu",
+    "custom",
+    "other",
+    "vod",
+    "tmdb",
+    "maiduidui",
+    "aiyifan",
+    "hongguo"
+  ],
+  "limits": {
+    "maxFiles": 160,
+    "maxSourceBytes": 8388608,
+    "maxSingleFileBytes": 1048576,
+    "maxArtifactBytes": 33554432
+  }
+}

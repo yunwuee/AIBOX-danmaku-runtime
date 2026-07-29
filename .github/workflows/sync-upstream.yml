@@ -1,0 +1,104 @@
+name: Watch upstream
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: upstream-main-sync
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+      commit: ${{ steps.meta.outputs.commit }}
+      short_commit: ${{ steps.meta.outputs.short_commit }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run sync:upstream -- --ref main
+      - run: npm run build
+      - id: diff
+        shell: bash
+        run: |
+          if git diff --quiet -- generated/upstream upstream.lock.json reports/upstream-sync.md LICENSE THIRD_PARTY_NOTICES.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - id: meta
+        if: steps.diff.outputs.changed == 'true'
+        shell: bash
+        run: |
+          commit="$(node -p "require('./upstream.lock.json').commit")"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "short_commit=${commit:0:12}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.diff.outputs.changed == 'true'
+        with:
+          name: upstream-sync
+          path: |
+            generated/upstream/
+            upstream.lock.json
+            reports/upstream-sync.md
+            LICENSE
+            THIRD_PARTY_NOTICES.md
+          if-no-files-found: error
+          retention-days: 3
+
+  open-pull-request:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPSTREAM_COMMIT: ${{ needs.prepare.outputs.commit }}
+      UPSTREAM_SHORT: ${{ needs.prepare.outputs.short_commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: upstream-sync
+          path: .sync-staging
+      - name: Skip an existing pull request
+        id: existing
+        shell: bash
+        run: |
+          branch="automation/upstream-${UPSTREAM_SHORT}"
+          count="$(gh pr list --head "$branch" --state all --json number --jq length)"
+          if [ "$count" != "0" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.existing.outputs.skip == 'false'
+        run: node scripts/apply-sync-artifact.mjs --source .sync-staging
+      - if: steps.existing.outputs.skip == 'false'
+        shell: bash
+        run: |
+          branch="automation/upstream-${UPSTREAM_SHORT}"
+          git switch -c "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add generated/upstream upstream.lock.json reports/upstream-sync.md LICENSE THIRD_PARTY_NOTICES.md
+          git commit -m "chore: sync danmu_api ${UPSTREAM_SHORT}"
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore: sync danmu_api ${UPSTREAM_SHORT}" \
+            --body "Automated candidate update for upstream commit \`${UPSTREAM_COMMIT}\`. This PR must pass the Node 18 runtime build, security verification, and human review before merge. See \`reports/upstream-sync.md\` for the deterministic selection report."

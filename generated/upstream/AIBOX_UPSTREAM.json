@@ -1,0 +1,63 @@
+{
+  "repository": "https://github.com/huangxd-/danmu_api.git",
+  "branch": "main",
+  "commit": "84d22da9a9ddd2eaa365b6118e7fabbc31198d70",
+  "commitDate": "2026-07-27T08:03:05+08:00",
+  "commitSubject": "docs: 更新项目结构文档，新增若干文件及目录",
+  "upstreamVersion": "1.0.0",
+  "generatedAt": "2026-07-27T08:03:05+08:00",
+  "fileCount": 46,
+  "sourceBytes": 1044248,
+  "packages": [
+    "brotli",
+    "node-fetch",
+    "opencc-js",
+    "pako"
+  ],
+  "replacements": [
+    {
+      "target": "danmu_api/sources/aiyifan.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/sources/custom.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/sources/hongguo.js",
+      "replacement": "stubs/disabled-hongguo-source.js"
+    },
+    {
+      "target": "danmu_api/sources/maiduidui.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/sources/migu.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/sources/other.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/sources/tmdb.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/sources/vod.js",
+      "replacement": "stubs/disabled-source.js"
+    },
+    {
+      "target": "danmu_api/utils/dan-any.js",
+      "replacement": "stubs/dan-any.js"
+    },
+    {
+      "target": "danmu_api/utils/local-redis-util.js",
+      "replacement": "stubs/local-redis-util.js"
+    },
+    {
+      "target": "danmu_api/utils/redis-util.js",
+      "replacement": "stubs/redis-util.js"
+    }
+  ]
+}
