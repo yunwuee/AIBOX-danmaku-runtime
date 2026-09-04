@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts --no-audit --no-fund --prefer-offline
       - run: npm run sync:upstream -- --ref main
       - run: npm run build
       - id: diff
