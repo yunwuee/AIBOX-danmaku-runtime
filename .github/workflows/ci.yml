@@ -14,8 +14,8 @@ jobs:
   node-18:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 18.20.4
           cache: npm
@@ -27,7 +27,7 @@ jobs:
           cp artifacts/aibox-danmaku-runtime-*.zip /tmp/aibox-runtime-utc.zip
           TZ=Asia/Shanghai npm run build
           cmp --silent /tmp/aibox-runtime-utc.zip artifacts/aibox-danmaku-runtime-*.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: runtime-candidate
           path: artifacts/
@@ -40,8 +40,8 @@ jobs:
       matrix:
         node: ['20', '22']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm

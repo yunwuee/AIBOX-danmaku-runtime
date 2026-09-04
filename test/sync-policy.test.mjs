@@ -12,6 +12,13 @@ test('normalizes source bytes independently of checkout line endings', () => {
   assert.equal(Buffer.byteLength(normalizeSourceText(windowsSource)), Buffer.byteLength(unixSource));
 });
 
+test('allows the Node HTTP transports used by the upstream request fallback', async () => {
+  const policy = await readJson(fromRoot('config', 'runtime-policy.json'));
+  for (const builtin of ['node:http', 'node:https', 'http', 'https']) {
+    assert.ok(policy.allowedNodeBuiltins.includes(builtin), `missing allowlist entry: ${builtin}`);
+  }
+});
+
 test('locks a reviewed upstream commit and records replacements', async () => {
   const lock = await readJson(fromRoot('upstream.lock.json'));
   assert.match(lock.commit, /^[0-9a-f]{40}$/);
