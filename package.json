@@ -1,6 +1,6 @@
 {
   "name": "@yunwuee/aibox-danmaku-runtime",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "AIBOX 内置 Node 使用的可审计弹幕运行时",
   "license": "AGPL-3.0-only",
