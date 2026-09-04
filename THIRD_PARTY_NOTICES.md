@@ -1,6 +1,6 @@
 # Third-party notices
 
-This runtime contains a mechanically selected and modified subset of [huangxd-/danmu_api](https://github.com/huangxd-/danmu_api) at commit `72e345e840343491804f2bdbbf70843e6ab17f7e`.
+This runtime contains a mechanically selected and modified subset of [huangxd-/danmu_api](https://github.com/huangxd-/danmu_api) at commit `28673ac764485b0f37966779bc3b14e2b97d31aa`.
 
 The upstream project is distributed under the GNU Affero General Public License v3.0. The corresponding selected source is committed under `generated/upstream/`; the deterministic selection rules live in `config/runtime-policy.json` and `scripts/sync-upstream.mjs`.
 
