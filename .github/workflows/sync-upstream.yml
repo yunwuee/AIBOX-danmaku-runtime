@@ -55,59 +55,83 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  publish-candidate:
+  validate:
     needs: prepare
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18.20.4', '20', '22']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - uses: actions/download-artifact@v8
+        with:
+          name: upstream-sync
+          path: .sync-staging
+      - run: node scripts/apply-sync-artifact.mjs --source .sync-staging
+      - run: npm ci --ignore-scripts --no-audit --no-fund --prefer-offline
+      - run: npm run check
+
+  auto-release:
+    needs: [prepare, validate]
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
       contents: write
-      issues: write
-      pull-requests: write
+      actions: write
     env:
-      GH_TOKEN: ${{ github.token }}
       UPSTREAM_COMMIT: ${{ needs.prepare.outputs.commit }}
       UPSTREAM_SHORT: ${{ needs.prepare.outputs.short_commit }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 18.20.4
+          cache: npm
       - uses: actions/download-artifact@v8
         with:
           name: upstream-sync
           path: .sync-staging
-      - name: Skip an existing candidate
-        id: existing
+      - run: node scripts/apply-sync-artifact.mjs --source .sync-staging
+      - run: npm run version:patch
+      - run: npm ci --ignore-scripts --no-audit --no-fund --prefer-offline
+      - run: npm run check
+      - name: Commit main and create release tag
+        id: release
         shell: bash
         run: |
-          branch="automation/upstream-${UPSTREAM_SHORT}"
-          branch_exists=false
-          if git ls-remote --exit-code --heads origin "refs/heads/$branch" >/dev/null 2>&1; then
-            branch_exists=true
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+          git fetch --tags origin
+          if git rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+            echo "Release tag ${tag} already exists; refusing to overwrite it." >&2
+            exit 1
           fi
-          count="$(gh pr list --head "$branch" --state all --json number --jq length)"
-          if [ "$branch_exists" = "true" ] || [ "$count" != "0" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-      - if: steps.existing.outputs.skip == 'false'
-        run: node scripts/apply-sync-artifact.mjs --source .sync-staging
-      - if: steps.existing.outputs.skip == 'false'
-        shell: bash
-        run: |
-          branch="automation/upstream-${UPSTREAM_SHORT}"
-          git switch -c "$branch"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add generated/upstream upstream.lock.json reports/upstream-sync.md LICENSE THIRD_PARTY_NOTICES.md
-          git commit -m "chore: sync danmu_api ${UPSTREAM_SHORT}"
-          git push --set-upstream origin "$branch"
-          if ! gh pr create \
-            --base main \
-            --head "$branch" \
-            --title "chore: sync danmu_api ${UPSTREAM_SHORT}" \
-            --body "Automated candidate update for upstream commit \`${UPSTREAM_COMMIT}\`. This PR must pass the Node 18 runtime build, security verification, and human review before merge. See \`reports/upstream-sync.md\` for the deterministic selection report."; then
-            gh issue create \
-              --title "Review danmu_api update ${UPSTREAM_SHORT}" \
-              --body "A reviewed candidate branch was created for upstream commit \`${UPSTREAM_COMMIT}\`, but repository policy prevented GitHub Actions from opening the pull request. [Open the comparison and create the pull request manually](https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}?expand=1)."
+          git add generated/upstream upstream.lock.json reports/upstream-sync.md LICENSE THIRD_PARTY_NOTICES.md package.json package-lock.json
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "No staged upstream or version changes were found." >&2
+            exit 1
           fi
+          git commit -m "chore: sync danmu_api ${UPSTREAM_SHORT} (v${version})"
+          git tag -a "${tag}" -m "AIBOX Danmaku Runtime ${tag}"
+          git push origin HEAD:main
+          git push origin "${tag}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Published source commit for ${tag}."
+      - name: Dispatch release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "${{ steps.release.outputs.tag }}" -f tag="${{ steps.release.outputs.tag }}"

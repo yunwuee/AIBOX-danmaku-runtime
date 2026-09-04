@@ -12,6 +12,7 @@
     "sync:upstream": "node scripts/sync-upstream.mjs",
     "apply:sync-artifact": "node scripts/apply-sync-artifact.mjs",
     "build": "node scripts/build-runtime.mjs",
+    "version:patch": "node scripts/bump-patch-version.mjs",
     "verify": "node scripts/verify-runtime.mjs",
     "test": "node --test --test-reporter=spec",
     "check": "npm run build && npm test && npm run verify"
