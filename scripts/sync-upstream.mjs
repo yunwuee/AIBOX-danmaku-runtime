@@ -138,7 +138,7 @@ const lock = {
 };
 await writeJson(fromRoot('upstream.lock.json'), lock);
 await mkdir(fromRoot('reports'), { recursive: true });
-await writeFile(fromRoot('reports', 'upstream-sync.md'), `# Upstream synchronization report\n\n- Repository: ${policy.upstream.repository}\n- Branch: \`${policy.upstream.branch}\`\n- Commit: \`${commit}\`\n- Commit date: ${commitDate}\n- Upstream version: \`${lock.upstreamVersion}\`\n- Selected modules: ${lock.fileCount}\n- Selected source bytes: ${lock.sourceBytes}\n- Replaced modules: ${lock.replacements.length}\n- Allowed packages: ${lock.packages.map((item) => `\`${item}\``).join(', ') || 'none'}\n\nThe synchronization workflow never publishes this update directly. A pull request must pass the Node 18 build, runtime tests, artifact inspection, and human review before release.\n`, 'utf8');
+await writeFile(fromRoot('reports', 'upstream-sync.md'), `# Upstream synchronization report\n\n- Repository: ${policy.upstream.repository}\n- Branch: \`${policy.upstream.branch}\`\n- Commit: \`${commit}\`\n- Commit date: ${commitDate}\n- Upstream version: \`${lock.upstreamVersion}\`\n- Selected modules: ${lock.fileCount}\n- Selected source bytes: ${lock.sourceBytes}\n- Replaced modules: ${lock.replacements.length}\n- Allowed packages: ${lock.packages.map((item) => `\`${item}\``).join(', ') || 'none'}\n\nThe synchronization workflow never publishes this update directly. A pull request must pass the Node 18/20/22/24 build, runtime tests, artifact inspection, and human review before release.\n`, 'utf8');
 
 console.log(`Synchronized ${graph.files.length} modules from ${commit.slice(0, 12)}.`);
 console.log(`Generated source: ${toPosix(path.relative(repoRoot, targetPath))}`);

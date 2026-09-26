@@ -30,6 +30,19 @@ test('locks a reviewed upstream commit and records replacements', async () => {
   assert.ok(replacedTargets.has('danmu_api/sources/migu.js'));
 });
 
+test('declares compatibility with the Node 24 host while retaining the supported baseline', async () => {
+  const packageJson = await readJson(fromRoot('package.json'));
+  assert.equal(packageJson.engines.node, '>=18.20.4 <25');
+});
+
+test('publishes the same Node range in runtime and release manifests', async () => {
+  const packageJson = await readJson(fromRoot('package.json'));
+  const runtimeManifest = await readJson(fromRoot('dist', 'manifest.json'));
+  const releaseManifest = await readJson(fromRoot('artifacts', 'release-manifest.json'));
+  assert.equal(runtimeManifest.nodeRange, packageJson.engines.node);
+  assert.equal(releaseManifest.nodeRange, packageJson.engines.node);
+});
+
 test('generated source cannot re-enable excluded local services', async () => {
   const globals = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'configs', 'globals.js'), 'utf8');
   const migu = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'sources', 'migu.js'), 'utf8');

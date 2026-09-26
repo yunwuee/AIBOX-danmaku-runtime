@@ -10,6 +10,7 @@ const require = createRequire(import.meta.url);
 const policy = await readJson(fromRoot('config', 'runtime-policy.json'));
 const runtimeManifest = await readJson(fromRoot('dist', 'manifest.json'));
 const releaseManifest = await readJson(fromRoot('artifacts', 'release-manifest.json'));
+const packageJson = await readJson(fromRoot('package.json'));
 const bundlePath = fromRoot('dist', runtimeManifest.entrypoint);
 const bundle = await readFile(bundlePath, 'utf8');
 const forbidden = [
@@ -30,6 +31,9 @@ const exported = require(bundlePath);
 if (typeof exported.registerDanmakuRuntime !== 'function') throw new Error('Runtime entrypoint export is missing');
 if (typeof exported.getDanmakuRuntimeInfo !== 'function') throw new Error('Runtime info export is missing');
 if (exported.danmakuRuntimeMetadata?.minimumNodeVersion !== '18.20.4') throw new Error('Unexpected minimum Node version');
+if (runtimeManifest.nodeRange !== packageJson.engines.node || releaseManifest.nodeRange !== packageJson.engines.node) {
+  throw new Error('Node version range does not match package.json');
+}
 if (exported.danmakuRuntimeMetadata?.upstreamCommit !== runtimeManifest.upstream.commit) {
   throw new Error('Bundled upstream commit does not match manifest');
 }
