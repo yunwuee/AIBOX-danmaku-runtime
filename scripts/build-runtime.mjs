@@ -1,4 +1,5 @@
 import { copyFile, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 import { zipSync } from 'fflate';
@@ -80,6 +81,22 @@ const runtimeManifest = {
   ],
 };
 await writeJson(path.join(distPath, 'manifest.json'), runtimeManifest);
+
+const patchResult = spawnSync(
+  process.execPath,
+  [
+    fromRoot('scripts', 'patch-aibox-runtime.mjs'),
+    bundlePath,
+    path.join(distPath, 'manifest.json'),
+  ],
+  { encoding: 'utf8' },
+);
+if (patchResult.error) throw patchResult.error;
+if (patchResult.status !== 0) {
+  throw new Error(`AIBOX runtime patch failed: ${patchResult.stderr || patchResult.stdout}`);
+}
+if (patchResult.stdout) process.stdout.write(patchResult.stdout);
+runtimeManifest.sha256 = (await readJson(path.join(distPath, 'manifest.json'))).sha256;
 
 const artifactName = `aibox-danmaku-runtime-${packageJson.version}.zip`;
 const artifactPath = path.join(artifactsPath, artifactName);

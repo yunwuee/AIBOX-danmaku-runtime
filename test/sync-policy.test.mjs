@@ -43,6 +43,13 @@ test('publishes the same Node range in runtime and release manifests', async () 
   assert.equal(releaseManifest.nodeRange, packageJson.engines.node);
 });
 
+test('embeds the per-source timeout and cancellation patch in the published runtime', async () => {
+  const bundle = await readFile(fromRoot('dist', 'runtime.bundle.cjs'), 'utf8');
+  assert.match(bundle, /function withSourcePipelineDeadline/);
+  assert.match(bundle, /sourceSearchContext/);
+  assert.match(bundle, /SourceTimeoutError/);
+});
+
 test('generated source cannot re-enable excluded local services', async () => {
   const globals = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'configs', 'globals.js'), 'utf8');
   const migu = await readFile(fromRoot('generated', 'upstream', 'danmu_api', 'sources', 'migu.js'), 'utf8');
